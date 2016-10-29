@@ -17,34 +17,31 @@
   "transforms the wikipedia text for vector embedding learning"
 
   (defn remove-wikiextractor-headers [text]
-    "removes the xml-like encapsulation of each wikipedia entry, produced by wikiextractor. this also discards the title of the entry,
-    which is of no concern for creating word vectors, thus discarding any notion of separation between the wikipedia entries"
-    (def wikiextractor-parser
-      "a parser for the output of wikiextractor (https://github.com/attardi/wikiextractor)"
-      (parser
-        "
-          S = Entry*
-          Entry = <Header> ContentAsText <Trailer> <OptionalPadding>
-          Header = '<doc' (' ' HeaderProp)* '>'
-          HeaderProp = #'[^=]*' '=' '\"' #'[^\"]*' '\"' (* e.g. id=\"4030\" *)
-          ContentAsText = #'(?sm).*'
-          Trailer = '</doc>'
-          OptionalPadding = #'\\s*'
-      ")
-    )
-    (wikiextractor-parser text))
+    "removes the xml-like encapsulation of each wikipedia entry of the wikiextractor (https://github.com/attardi/wikiextractor) output.
+    this also discards the title of the entry, which is of no concern for creating word vectors, thus discarding any notion of separation
+    between the wikipedia entries"
+    (clojure.string/replace text #"<doc.*>|</doc>" "")
+  )
 
   (remove-wikiextractor-headers text))
 
 (defn -main [input-path]
   "iterates the output directory of the wikiextractor tool, combining its output files into a single file while stripping away the xml wrappers" []
   (println "input:" input-path)
+
+  (if (.exists (clojure.java.io/as-file output-file))
+    (do
+      (println "clearing output file")
+      (clojure.java.io/delete-file output-file)))
+
+  (println "after")
   (let [files (files input-path)]
     (println "About to combine wikiextractor output files from" input-path)
     (println "Found" (count files) "files to combine")
     ;(doseq [file files] (println file (parse (java.io.FileReader. file))))
     (doseq [file files] (append (transform (slurp file))))
-    (println "done")))
+    (println "done"))
+)
 
 ;; TODOS:
 ;;
