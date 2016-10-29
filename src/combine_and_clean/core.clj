@@ -26,7 +26,7 @@
   (remove-wikiextractor-headers text))
 
 (defn -main [input-path]
-  "iterates the output directory of the wikiextractor tool, combining its output files into a single file while stripping away the xml wrappers" []
+  "iterates the output directory of the wikiextractor tool, combining its output files into a single file" []
   (println "input:" input-path)
 
   (if (.exists (clojure.java.io/as-file output-file))
@@ -34,13 +34,13 @@
       (println "clearing output file")
       (clojure.java.io/delete-file output-file)))
 
-  (println "after")
   (let [files (files input-path)]
     (println "About to combine wikiextractor output files from" input-path)
     (println "Found" (count files) "files to combine")
-    ;(doseq [file files] (println file (parse (java.io.FileReader. file))))
+
     (doseq [file files] (append (transform (slurp file))))
-    (println "done"))
+
+    (println "Done"))
 )
 
 ;; TODOS:
