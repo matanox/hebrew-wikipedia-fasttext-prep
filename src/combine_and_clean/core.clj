@@ -4,20 +4,36 @@
 
 (defn append
   "appends content to the output file"
-  [file]
-  (spit output-file (slurp file) :append true))
+  [text]
+  (spit output-file text :append true))
 
 (defn files [path]
   "returns all files (real files, not directories and such) residing under or nested under the given path"
   (filter (fn[x](.isFile x)) (file-seq (clojure.java.io/file path))))
 
+(use '[instaparse.core :only (parser)]) ; https://github.com/Engelberg/instaparse
+
 (defn transform [text]
-  (require '[instaparse.core :as parse])
   "transforms the wikipedia text for vector embedding learning"
+
   (defn remove-wikiextractor-headers [text]
     "removes the xml-like encapsulation of each wikipedia entry, produced by wikiextractor. this also discards the title of the entry,
     which is of no concern for creating word vectors, thus discarding any notion of separation between the wikipedia entries"
-    text)
+    (def wikiextractor-parser
+      "a parser for the output of wikiextractor (https://github.com/attardi/wikiextractor)"
+      (parser
+        "
+          S = Entry*
+          Entry = <Header> ContentAsText <Trailer> <OptionalPadding>
+          Header = '<doc' (' ' HeaderProp)* '>'
+          HeaderProp = #'[^=]*' '=' '\"' #'[^\"]*' '\"' (* e.g. id=\"4030\" *)
+          ContentAsText = #'(?sm).*'
+          Trailer = '</doc>'
+          OptionalPadding = #'\\s*'
+      ")
+    )
+    (wikiextractor-parser text))
+
   (remove-wikiextractor-headers text))
 
 (defn -main [input-path]
@@ -27,7 +43,7 @@
     (println "About to combine wikiextractor output files from" input-path)
     (println "Found" (count files) "files to combine")
     ;(doseq [file files] (println file (parse (java.io.FileReader. file))))
-    (doseq [file files] (append (transform file)))
+    (doseq [file files] (append (transform (slurp file))))
     (println "done")))
 
 ;; TODOS:
