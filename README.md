@@ -5,7 +5,7 @@ Preprocessing for stuffing [WikiExtractor](https://github.com/attardi/wikiextrac
 ## Usage
 
 Have [leiningen](http://leiningen.org/) installed and working.
-run:
+Run:
 
 ```
 lein run path-to-wikiextractor-output
